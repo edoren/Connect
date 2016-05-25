@@ -1,4 +1,5 @@
 import socket
+from struct import pack, unpack
 from threading import Lock
 
 from .Message import Message
@@ -35,11 +36,13 @@ class SocketManager:
             self.socket = socket.socket()
             self.socket.connect(address)
 
-    def Receive(self, buffer_size=2048):
+    def Receive(self):
         with self._receive_lock:
             data = None
             try:
-                data = self.socket.recv(buffer_size)
+                data = self.socket.recv(4)
+                msg_size = unpack("<I", data)[0]
+                data = self.socket.recv(msg_size)
             except:
                 raise
             finally:
@@ -55,7 +58,9 @@ class SocketManager:
                                 .format(msg.__class__, Message.__class__))
             serialized = Message.Encode(msg, self.Serializer)
             try:
-                self.socket.send(serialized)
+                data = pack("<I", len(serialized))
+                data += serialized
+                self.socket.send(data)
             except:
                 raise socket.error("connection forcibly closed.")
 
