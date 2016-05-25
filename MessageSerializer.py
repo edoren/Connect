@@ -15,7 +15,13 @@ class MessageSerializer:
 
 class JsonSerializer(MessageSerializer):
     def Encode(obj):
-        return json.dumps(obj).encode("UTF-8")
+        try:
+            return json.dumps(obj).encode("UTF-8")
+        except:
+            return None
 
     def Decode(data):
-        return json.loads(data.decode("UTF-8"))
+        try:
+            return json.loads(data.decode("UTF-8"))
+        except:
+            return None
