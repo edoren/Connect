@@ -14,6 +14,7 @@ class SafeMutableContainer(object):
             return super(SafeMutableContainer, self).__setitem__(key, value)
 
     def __delitem__(self, key):
+        print("del called")
         with self._lock:
             return super(SafeMutableContainer, self).__delitem__(key)
 
@@ -66,6 +67,10 @@ class SafeDict(SafeMutableContainer, dict):
     def clear(self):
         with self._lock:
             return super(SafeDict, self).clear()
+
+    def get(self, *args, **kwargs):
+        with self._lock:
+            return super(SafeDict, self).get(*args, **kwargs)
 
     def pop(self, *args, **kwargs):
         with self._lock:
