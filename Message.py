@@ -10,29 +10,43 @@ __all__ = ["Message"]
 
 class Message:
 
-    def __init__(self, msgtype, contents=None):
+    def __init__(self, msgtype, content=None):
         self.type = msgtype
-        self.contents = contents
+        self.content = content
 
     def __str__(self):
-        return str({"type": self.type, "contents": self.contents})
+        return str({"type": self.type, "content": self.content})
 
-    def Encode(msg, serializer):
+    def Encode(msg, Serializer):
         if not isinstance(msg, Message):
             raise TypeError("argument must be an instance of Message")
-        if not issubclass(serializer, MessageSerializer):
+        if not issubclass(Serializer, MessageSerializer):
             raise TypeError("argument must be subclass of "
                             "MessageSerializer")
-        obj = {"type": msg.type, "contents": msg.contents}
-        return serializer.Encode(obj)
 
-    def Decode(data, serializer):
-        if not issubclass(serializer, MessageSerializer):
+        if msg.content is None:
+            obj = {"type": msg.type}
+        else:
+            obj = {"type": msg.type, "content": msg.content}
+
+        result = Serializer.Encode(obj)
+
+        if isinstance(result, (bytes, bytearray)):
+            return result
+        else:
+            return None
+
+    def Decode(data, Serializer):
+        if not issubclass(Serializer, MessageSerializer):
             raise TypeError("argument must be subclass of "
                             "MessageSerializer")
-        result = serializer.Decode(data)
-        if "type" in result and "contents" in result:
-            return Message(result["type"], result["contents"])
-        else:
-            # decode error
-            pass
+
+        result = Serializer.Decode(data)
+
+        if isinstance(result, dict):
+            type_data = result.get("type")
+            content_data = result.get("content")
+            if type_data is not None:
+                return Message(type_data, content_data)
+
+        return None
