@@ -14,7 +14,6 @@ class SafeMutableContainer(object):
             return super(SafeMutableContainer, self).__setitem__(key, value)
 
     def __delitem__(self, key):
-        print("del called")
         with self._lock:
             return super(SafeMutableContainer, self).__delitem__(key)
 

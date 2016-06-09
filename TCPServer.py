@@ -76,8 +76,9 @@ class TCPServer:
                      client_address) = self.socket.accept()
 
                     # Create the socket manager for the client
-                    socket_manager = SocketManager(client_socket,
-                                                   self.Serializer)
+                    socket_manager = SocketManager(socket=client_socket,
+                                                   address=client_address,
+                                                   Serializer=self.Serializer)
 
                     # Add the client to the client list and waiting list
                     self.clients.append(socket_manager)

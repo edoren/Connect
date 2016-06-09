@@ -9,38 +9,37 @@ __all__ = ["SocketManager"]
 
 
 class SocketManager:
-    def __init__(self, arg=None, Serializer=JsonSerializer):
-        self.socket = None
-        self.address = None
-        self.Serializer = Serializer
+    def __init__(self, **kwargs):
+        self.socket = kwargs.get("socket", None)
+        self.address = kwargs.get("address", None)
+        self.Serializer = kwargs.get("Serializer", JsonSerializer)
         self._send_lock = Lock()
         self._receive_lock = Lock()
 
-        if isinstance(arg, tuple) and len(arg) == 2 and \
-           isinstance(arg[0], str) and isinstance(arg[1], int):
-            self.address = arg
-            self.Connect(self.address)
-        elif isinstance(arg, socket.socket):
-            self.socket = arg
-            self.address = self.socket.getsockname()
+        if self.address is not None:
+            if self.socket is None:
+                self.socket = socket.socket()
+                self.socket.connect(self.address)
         else:
-            raise TypeError("fist argument must be a tuple with (host, port) "
-                            "or a socket")
+            raise TypeError("SocketManager constructor should provide an "
+                            "'address' key with (host, port) tuple.")
 
-        if not issubclass(self.Serializer, MessageSerializer):
-            raise TypeError("second argument must be subclass of "
-                            "MessageSerializer")
+        try:
+            isserializer = issubclass(self.Serializer, MessageSerializer)
+        except:
+            isserializer = False
 
-    def Connect(self, address):
-        if self.socket is None:
-            self.socket = socket.socket()
-            self.socket.connect(address)
+        if not isserializer:
+            raise TypeError("'Serializer' key should contain a subclass of {}."
+                            .format(MessageSerializer.__name__))
 
     def Receive(self):
         with self._receive_lock:
             data = None
             try:
                 data = self.socket.recv(4)
+                if len(data) != 4:
+                    return None
                 msg_size = unpack("<I", data)[0]
                 data = self.socket.recv(msg_size)
             except:
